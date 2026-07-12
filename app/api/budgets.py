@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from datetime import date
 from app.db.database import get_db
 from app.schemas.schemas import BudgetCreate, BudgetOut
 from app.models.models import Budget, Expense, User
@@ -35,8 +36,8 @@ def get_budgets(month: str, db: Session = Depends(get_db), user: User = Depends(
     results = []
     for b in budgets:
         year, mon = map(int, b.month.split('-'))
-        start_date = f"{b.month}-01"
-        end_date = f"{year}-{mon+1:02d}-01" if mon < 12 else f"{year+1}-01-01"
+        start_date = date(year, mon, 1)
+        end_date = date(year, mon + 1, 1) if mon < 12 else date(year + 1, 1, 1)
         used = db.query(func.sum(Expense.amount)).filter(
             Expense.user_id == user.id,
             Expense.category == b.category,

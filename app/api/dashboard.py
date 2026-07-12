@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from datetime import date
 from app.db.database import get_db
 from app.schemas.schemas import MonthlySummary
 from app.models.models import Expense, Budget, User
@@ -11,8 +12,8 @@ router = APIRouter()
 @router.get("/monthly-summary", response_model=MonthlySummary)
 def get_summary(month: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     year, mon = map(int, month.split('-'))
-    start_date = f"{month}-01"
-    end_date = f"{year}-{mon+1:02d}-01" if mon < 12 else f"{year+1}-01-01"
+    start_date = date(year, mon, 1)
+    end_date = date(year, mon + 1, 1) if mon < 12 else date(year + 1, 1, 1)
 
     total_expenses = db.query(func.sum(Expense.amount)).filter(
         Expense.user_id == user.id,

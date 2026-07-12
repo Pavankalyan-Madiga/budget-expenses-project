@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate, useState } from 'react-router-dom';
+import { useState } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import SignIn from './pages/SignIn';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -20,11 +21,11 @@ function App() {
     <Routes>
       <Route path="/" element={<SignIn />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/dashboard" element={<Dashboard isDark={isDark} />} />
-      <Route path="/expenses" element={<Expenses isDark={isDark} />} />
-      <Route path="/budgets" element={<Budgets isDark={isDark} />} />
-      <Route path="/calendar" element={<Calendar isDark={isDark} />} />
-      <Route path="/accounts" element={<Accounts isDark={isDark} />} />
+      <Route path="/dashboard" element={<Dashboard isDark={isDark} toggleTheme={toggleTheme} />} />
+      <Route path="/expenses" element={<Expenses isDark={isDark} toggleTheme={toggleTheme} />} />
+      <Route path="/budgets" element={<Budgets isDark={isDark} toggleTheme={toggleTheme} />} />
+      <Route path="/calendar" element={<Calendar isDark={isDark} toggleTheme={toggleTheme} />} />
+      <Route path="/accounts" element={<Accounts isDark={isDark} toggleTheme={toggleTheme} />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

@@ -4,7 +4,7 @@ import Sidebar from '../components/Sidebar';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import API from '../api/axiosConfig';
 
-export default function Budgets({ isDark }) {
+export default function Budgets({ isDark, toggleTheme }) {
   const navigate = useNavigate();
   const currentDate = new Date();
   const [currentMonth, setCurrentMonth] = useState(currentDate.toISOString().slice(0, 7)); 
@@ -57,7 +57,7 @@ export default function Budgets({ isDark }) {
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar isDark={isDark} />
+      <Sidebar isDark={isDark} toggleTheme={toggleTheme} />
       <main className="flex-1 p-8 overflow-y-auto relative">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold">Budgets</h1>

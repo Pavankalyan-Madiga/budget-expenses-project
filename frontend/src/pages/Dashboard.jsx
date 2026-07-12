@@ -24,10 +24,10 @@ const recentExpenses = [
   { name: 'Netflix Subscription', category: 'Entertainment', amount: -15.99, date: 'Jun 10' },
 ];
 
-export default function Dashboard({ isDark }) {
+export default function Dashboard({ isDark, toggleTheme }) {
   return (
     <div className="flex min-h-screen" style={{ backgroundColor: isDark ? '#0a0a0f' : '#f3f4f6', color: isDark ? 'white' : 'black' }}>
-      <Sidebar isDark={isDark} toggleTheme={() => {}} />
+      <Sidebar isDark={isDark} toggleTheme={toggleTheme} />
       <main className="flex-1 p-8 space-y-8 overflow-y-auto">
         <div className="flex justify-between items-center">
           <div>

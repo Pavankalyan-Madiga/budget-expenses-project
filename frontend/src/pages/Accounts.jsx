@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { RefreshCw } from 'lucide-react';
 
-export default function Accounts({ isDark }) {
+export default function Accounts({ isDark, toggleTheme }) {
   const navigate = useNavigate();
   const [accountsList, setAccountsList] = useState([
     { id: 1, name: 'Main Checking', bank: 'Chase Bank', type: 'Checking', balance: 12450.82, status: 'Syncing', color: 'bg-blue-600 text-white' },
@@ -22,7 +22,7 @@ export default function Accounts({ isDark }) {
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar isDark={isDark} />
+      <Sidebar isDark={isDark} toggleTheme={toggleTheme} />
       <main className="flex-1 p-8 overflow-y-auto">
         <div className="mb-8">
           <h1 className="text-2xl font-bold">Accounts</h1>

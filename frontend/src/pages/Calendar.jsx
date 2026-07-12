@@ -4,7 +4,7 @@ import Sidebar from '../components/Sidebar';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import API from '../api/axiosConfig';
 
-export default function Calendar({ isDark }) {
+export default function Calendar({ isDark, toggleTheme }) {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState([]);
@@ -24,7 +24,8 @@ export default function Calendar({ isDark }) {
   const fetchEvents = async () => {
     try {
       const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
-      const response = await API.get(`/expenses/?start_date=${monthStr}-01&end_date=${monthStr}-31`);
+      const lastDay = new Date(year, month + 1, 0).getDate();
+      const response = await API.get(`/expenses/?start_date=${monthStr}-01&end_date=${monthStr}-${String(lastDay).padStart(2, '0')}`);
       setEvents(response.data);
     } catch (error) { console.error(error) }
   };
@@ -45,7 +46,7 @@ export default function Calendar({ isDark }) {
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar isDark={isDark} />
+      <Sidebar isDark={isDark} toggleTheme={toggleTheme} />
       <main className="flex-1 p-8 overflow-y-auto">
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center space-x-4">

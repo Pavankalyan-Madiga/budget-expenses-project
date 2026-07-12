@@ -4,7 +4,7 @@ import Sidebar from '../components/Sidebar';
 import { X, Upload, Plus } from 'lucide-react';
 import API from '../api/axiosConfig';
 
-export default function Expenses() {
+export default function Expenses({ isDark, toggleTheme }) {
   const navigate = useNavigate();
   const [expenses, setExpenses] = useState([]);
   const [budgetCategories, setBudgetCategories] = useState([]);
@@ -84,8 +84,8 @@ export default function Expenses() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#0a0a0f] text-white">
-      <Sidebar />
+    <div className={`flex min-h-screen transition-colors ${isDark ? 'bg-[#0a0a0f] text-white' : 'bg-gray-100 text-black'}`}>
+      <Sidebar isDark={isDark} toggleTheme={toggleTheme} />
       <main className="flex-1 p-8 relative overflow-hidden">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold">Expenses</h1>
@@ -95,9 +95,9 @@ export default function Expenses() {
           </button>
         </div>
 
-        <div className="bg-[#12121a] rounded-xl border border-gray-800 overflow-hidden">
+        <div className={`rounded-xl border overflow-hidden ${isDark ? 'bg-[#12121a] border-gray-800' : 'bg-white border-gray-200 shadow-sm'}`}>
           <table className="w-full text-sm text-left">
-            <thead className="text-xs text-gray-400 uppercase bg-[#12121a] border-b border-gray-800">
+            <thead className={`text-xs text-gray-400 uppercase border-b ${isDark ? 'bg-[#12121a] border-gray-800' : 'bg-white border-gray-200'}`}>
               <tr>
                 <th className="px-6 py-4">Transaction</th>
                 <th className="px-6 py-4">Category</th>
@@ -111,7 +111,7 @@ export default function Expenses() {
                 <tr><td colSpan="5" className="px-6 py-8 text-center text-gray-500">No expenses found.</td></tr>
               ) : (
                 expenses.map((exp) => (
-                  <tr key={exp.id} className="border-b border-gray-800 hover:bg-[#1e1e2e] transition-colors">
+                  <tr key={exp.id} className={`border-b transition-colors ${isDark ? 'border-gray-800 hover:bg-[#1e1e2e]' : 'border-gray-100 hover:bg-gray-50'}`}>
                     <td className="px-6 py-4 font-medium">{exp.description}</td>
                     <td className="px-6 py-4 text-gray-400">{exp.category}</td>
                     <td className="px-6 py-4 text-gray-400">{exp.expense_date}</td>
@@ -128,7 +128,7 @@ export default function Expenses() {
 
         {isOpen && (
           <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-[100]">
-            <div className="bg-[#12121a] w-full max-w-md p-6 rounded-xl border border-gray-700 space-y-6">
+            <div className={`w-full max-w-md p-6 rounded-xl border space-y-6 ${isDark ? 'bg-[#12121a] border-gray-700' : 'bg-white border-gray-300'}`}>
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-bold">Add Expense</h2>
                 <button onClick={() => { setIsOpen(false); resetForm(); }} disabled={loading}><X size={24} className="text-gray-400 hover:text-white" /></button>

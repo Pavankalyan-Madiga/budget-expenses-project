@@ -182,3 +182,17 @@
     border-right-color: var(--border);
   }
 }
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Dark Mode (Default) */
+body {
+  @apply bg-[#0a0a0f] text-white transition-colors duration-300;
+}
+
+/* Light Mode Override */
+body.light-mode {
+  @apply bg-gray-100 text-gray-900;
+}

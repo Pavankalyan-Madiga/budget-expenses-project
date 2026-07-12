@@ -5,6 +5,7 @@ from app.db.database import get_db
 from app.schemas.schemas import BudgetCreate, BudgetOut
 from app.models.models import Budget, Expense, User
 from app.core.config import get_current_user
+from fastapi import HTTPException
 
 router = APIRouter()
 
@@ -40,3 +41,12 @@ def get_budgets(month: str, db: Session = Depends(get_db), user: User = Depends(
             percentage_consumed=round((used / b.budget_amount) * 100, 2) if b.budget_amount > 0 else 0
         ))
     return results
+
+@router.delete("/{budget_id}", status_code=204)
+def delete_budget(budget_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    budget = db.query(Budget).filter(Budget.id == budget_id, Budget.user_id == user.id).first()
+    if not budget:
+        raise HTTPException(status_code=404, detail="Budget not found")
+    db.delete(budget)
+    db.commit()
+    return

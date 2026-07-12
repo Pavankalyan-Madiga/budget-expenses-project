@@ -11,8 +11,16 @@ router = APIRouter()
 
 @router.get("/csv")
 def export_expenses_csv(month: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    expenses = db.query(Expense).filter(Expense.user_id == user.id, Expense.expense_date.startswith(month)).all()
-    
+    year, mon = map(int, month.split('-'))
+    start_date = f"{month}-01"
+    end_date = f"{year}-{mon+1:02d}-01" if mon < 12 else f"{year+1}-01-01"
+
+    expenses = db.query(Expense).filter(
+        Expense.user_id == user.id,
+        Expense.expense_date >= start_date,
+        Expense.expense_date < end_date
+    ).all()
+
     if not expenses:
         return {"error": "No expenses found for this month"}
 

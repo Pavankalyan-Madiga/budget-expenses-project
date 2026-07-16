@@ -32,6 +32,7 @@ export default function Dashboard({ isDark, toggleTheme }) {
   const [recentExpenses, setRecentExpenses] = useState([]);
   const [comparisonData, setComparisonData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (!localStorage.getItem('token')) navigate('/');
@@ -40,8 +41,9 @@ export default function Dashboard({ isDark, toggleTheme }) {
   const monthLabel = (dateObj) => dateObj.toLocaleString('default', { month: 'short' });
   const monthStr = toMonthStr;
 
-  const fetchDashboard = async () => {
-    setLoading(true);
+  const fetchDashboard = async (isManualRefresh = false) => {
+    if (isManualRefresh) setRefreshing(true);
+    else setLoading(true);
     try {
       const [summaryRes, budgetsRes, expensesRes] = await Promise.all([
         API.get(`/dashboard/monthly-summary?month=${currentMonth}`),
@@ -84,6 +86,7 @@ export default function Dashboard({ isDark, toggleTheme }) {
       console.error("Failed to load dashboard data", error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -101,8 +104,18 @@ export default function Dashboard({ isDark, toggleTheme }) {
             <h1 className="text-2xl font-bold">Dashboard</h1>
             <p className="text-gray-500 text-sm">Welcome back</p>
           </div>
-          <div className={`text-sm px-4 py-2 rounded-lg border ${isDark ? 'text-gray-400 bg-[#12121a] border-gray-800' : 'text-gray-600 bg-white border-gray-200'}`}>
-            {now.toLocaleString('default', { month: 'long', year: 'numeric' })}
+          <div className="flex items-center space-x-3">
+            <div className={`text-sm px-4 py-2 rounded-lg border ${isDark ? 'text-gray-400 bg-[#12121a] border-gray-800' : 'text-gray-600 bg-white border-gray-200'}`}>
+              {now.toLocaleString('default', { month: 'long', year: 'numeric' })}
+            </div>
+            <button
+              onClick={() => fetchDashboard(true)}
+              disabled={refreshing}
+              title="Refresh"
+              className={`px-3 py-2 rounded-lg border text-sm transition-colors disabled:opacity-50 ${isDark ? 'bg-[#12121a] border-gray-800 text-gray-300 hover:text-white' : 'bg-white border-gray-300 text-gray-700 hover:text-black'}`}
+            >
+              {refreshing ? '…' : '⟳'}
+            </button>
           </div>
         </div>
 

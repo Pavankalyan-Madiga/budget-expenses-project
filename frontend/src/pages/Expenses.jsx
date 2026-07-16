@@ -23,11 +23,13 @@ export default function Expenses({ isDark, toggleTheme }) {
 
   const fetchCategories = async () => {
     try {
-      const currentMonth = new Date().toISOString().slice(0, 7);
-      const response = await API.get(`/budgets/?month=${currentMonth}`);
-      const cats = response.data.map(b => b.category);
+      // Pulls every category you've ever created a budget for, not just
+      // ones with a budget in the current calendar month — so a category
+      // shows up here right away, no matter which month you set it for.
+      const response = await API.get('/budgets/categories');
+      const cats = response.data;
       setBudgetCategories(cats);
-      if (cats.length > 0 && !category) setCategory(cats[0]);
+      setCategory((prev) => (prev && cats.includes(prev)) ? prev : (cats[0] || ''));
     } catch (error) {
       console.error("Failed to fetch categories", error);
     }
@@ -46,6 +48,12 @@ export default function Expenses({ isDark, toggleTheme }) {
     fetchExpenses();
     fetchCategories();
   }, []);
+
+  // Re-check for new categories every time the modal is opened, so a budget
+  // you just added on the Budgets page shows up here without a page reload.
+  useEffect(() => {
+    if (isOpen) fetchCategories();
+  }, [isOpen]);
 
   const handleSave = async (e) => {
     e.preventDefault();

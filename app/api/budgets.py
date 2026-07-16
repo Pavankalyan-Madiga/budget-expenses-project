@@ -56,6 +56,23 @@ def get_budgets(month: str, db: Session = Depends(get_db), user: User = Depends(
         ))
     return results
 
+@router.get("/categories", response_model=list[str])
+def get_all_budget_categories(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """
+    All distinct categories the user has ever set a budget for, across every
+    month — not just the current one. The Add Expense form uses this so a
+    category shows up there as soon as you create a budget for it, regardless
+    of which month you picked.
+    """
+    rows = (
+        db.query(Budget.category)
+        .filter(Budget.user_id == user.id)
+        .distinct()
+        .order_by(Budget.category.asc())
+        .all()
+    )
+    return [r[0] for r in rows]
+
 @router.delete("/{budget_id}", status_code=204)
 def delete_budget(budget_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     budget = db.query(Budget).filter(Budget.id == budget_id, Budget.user_id == user.id).first()

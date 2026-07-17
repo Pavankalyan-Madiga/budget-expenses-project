@@ -13,7 +13,7 @@ export default function Expenses({ isDark, toggleTheme }) {
   const [errorMsg, setErrorMsg] = useState('');
 
   const [amount, setAmount] = useState('');
-  const [date, setDate] = useState('');
+  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
 
@@ -79,14 +79,6 @@ export default function Expenses({ isDark, toggleTheme }) {
     fetchExpenses();
   }, []);
 
-  // When the modal opens, default the date to today (if empty) so there's
-  // always a month to look budgets up for.
-  useEffect(() => {
-    if (isOpen && !date) {
-      setDate(new Date().toISOString().slice(0, 10));
-    }
-  }, [isOpen]);
-
   // Re-fetch the category list every time the selected date's month changes —
   // this is what keeps the dropdown scoped to "budgets that exist for the
   // month you're logging this expense in", not every budget you've ever made.
@@ -136,7 +128,7 @@ export default function Expenses({ isDark, toggleTheme }) {
 
   const resetForm = () => {
     setAmount('');
-    setDate('');
+    setDate(new Date().toISOString().slice(0, 10));
     setDescription('');
     setErrorMsg('');
     if (budgetCategories.length > 0) setCategory(budgetCategories[0]);

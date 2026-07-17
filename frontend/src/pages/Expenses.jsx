@@ -34,6 +34,7 @@ export default function Expenses({ isDark, toggleTheme }) {
   const [fetchingExpenses, setFetchingExpenses] = useState(false);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [slowNotice, setSlowNotice] = useState(false);
+  const [saveSlowNotice, setSaveSlowNotice] = useState(false);
 
   useEffect(() => {
     if (!localStorage.getItem('token')) navigate('/');
@@ -126,6 +127,7 @@ export default function Expenses({ isDark, toggleTheme }) {
   const handleSave = async (e) => {
     e.preventDefault();
     setErrorMsg('');
+    setSaveSlowNotice(false);
     const today = new Date().toISOString().slice(0, 10);
     const effectiveDate = payFrom === 'account' ? today : date;
 
@@ -140,38 +142,53 @@ export default function Expenses({ isDark, toggleTheme }) {
     }
 
     setLoading(true);
+    // Free-tier backends spin down when idle — the first request after a
+    // while can take 30-60s to wake up. Flag it after a few seconds instead
+    // of leaving the button looking stuck.
+    const slowTimer = setTimeout(() => setSaveSlowNotice(true), 4000);
 
-    try {
-      const savedMonth = effectiveDate.slice(0, 7);
-      const payload = payFrom === 'account'
-        ? { amount: parseFloat(amount), description, expense_date: effectiveDate, account_id: accountId }
-        : { amount: parseFloat(amount), description, expense_date: effectiveDate, category };
+    const savedMonth = effectiveDate.slice(0, 7);
+    const payload = payFrom === 'account'
+      ? { amount: parseFloat(amount), description, expense_date: effectiveDate, account_id: accountId }
+      : { amount: parseFloat(amount), description, expense_date: effectiveDate, category };
 
-      await API.post('/expenses/', payload);
-
-      setIsOpen(false);
-      resetForm();
-      // Jump the list to whatever month this expense was logged in, so it's
-      // visible immediately even if you were viewing a different month.
-      if (savedMonth === listMonth) fetchExpenses();
-      else setListMonth(savedMonth);
-    } catch (error) {
-      console.error("Failed to save expense.", error);
-      if (error.response) {
-        const detail = error.response.data?.detail;
-        setErrorMsg(
-          typeof detail === 'string' ? detail :
-          Array.isArray(detail) ? detail.map(d => d.msg).join(', ') :
-          `Failed to save (status ${error.response.status}).`
-        );
-      } else if (error.request) {
-        setErrorMsg('No response from server — check your connection or the backend URL.');
-      } else {
-        setErrorMsg('Something went wrong while saving.');
+    const attemptSave = async (isRetry = false) => {
+      try {
+        await API.post('/expenses/', payload);
+        setIsOpen(false);
+        resetForm();
+        // Jump the list to whatever month this expense was logged in, so
+        // it's visible immediately even if you were viewing a different one.
+        if (savedMonth === listMonth) fetchExpenses();
+        else setListMonth(savedMonth);
+      } catch (error) {
+        console.error("Failed to save expense.", error);
+        // A pure network failure (no response at all) during a cold start is
+        // usually transient — the server was mid-wake-up. Try once more
+        // automatically before bothering the user with an error.
+        if (!isRetry && error.request && !error.response) {
+          await attemptSave(true);
+          return;
+        }
+        if (error.response) {
+          const detail = error.response.data?.detail;
+          setErrorMsg(
+            typeof detail === 'string' ? detail :
+            Array.isArray(detail) ? detail.map(d => d.msg).join(', ') :
+            `Failed to save (status ${error.response.status}).`
+          );
+        } else if (error.request) {
+          setErrorMsg('Still no response from the server after retrying. It may still be waking up — wait a few seconds and try again.');
+        } else {
+          setErrorMsg('Something went wrong while saving.');
+        }
       }
-    } finally {
-      setLoading(false);
-    }
+    };
+
+    await attemptSave();
+    clearTimeout(slowTimer);
+    setSaveSlowNotice(false);
+    setLoading(false);
   };
 
   const resetForm = () => {
@@ -374,6 +391,11 @@ export default function Expenses({ isDark, toggleTheme }) {
 
                 {errorMsg && (
                   <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 mb-4">{errorMsg}</p>
+                )}
+                {saveSlowNotice && (
+                  <p className="text-xs text-gray-500 text-center mb-4">
+                    Still working — the server can take up to a minute to wake up on its first request.
+                  </p>
                 )}
 
                 <div className="flex space-x-4">

@@ -4,136 +4,113 @@ import Sidebar from '../components/Sidebar';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import API from '../api/axiosConfig';
-
 function ChartTooltip({ active, payload, label, isDark }) {
-  if (!active || !payload || !payload.length) return null;
-  return (
-    <div
-      className={`px-4 py-3 rounded-lg border shadow-xl ${
-        isDark ? 'bg-[#1a1a24] border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'
-      }`}
-    >
+    if (!active || !payload || !payload.length)
+        return null;
+    return (<div className={`px-4 py-3 rounded-lg border shadow-xl ${isDark ? 'bg-[#1a1a24] border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}>
       <p className="text-xs text-gray-400 mb-1">{label}</p>
       <p className="text-sm font-semibold">
         ${payload[0].value.toFixed(2)}
       </p>
-    </div>
-  );
+    </div>);
 }
-
 export default function Dashboard({ isDark, toggleTheme }) {
-  const navigate = useNavigate();
-  const toMonthStr = (dateObj) => `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
-  const [currentMonth, setCurrentMonth] = useState(toMonthStr(new Date()));
-
-  const [summary, setSummary] = useState({ total_expenses: 0, total_budget: 0 });
-  const [budgets, setBudgets] = useState([]);
-  const [recentExpenses, setRecentExpenses] = useState([]);
-  const [comparisonData, setComparisonData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  useEffect(() => {
-    if (!localStorage.getItem('token')) navigate('/');
-  }, [navigate]);
-
-  const monthLabel = (dateObj) => dateObj.toLocaleString('default', { month: 'short' });
-  const monthStr = toMonthStr;
-  const formatMonth = (m) => new Date(m + '-01T00:00:00').toLocaleString('default', { month: 'long', year: 'numeric' });
-  const changeMonth = (direction) => {
-    const [y, m] = currentMonth.split('-').map(Number);
-    const d = new Date(y, m - 1 + direction, 1);
-    setCurrentMonth(toMonthStr(d));
-  };
-
-  const fetchDashboard = async (isManualRefresh = false) => {
-    if (isManualRefresh) setRefreshing(true);
-    else setLoading(true);
-    try {
-      const [summaryRes, budgetsRes, expensesRes] = await Promise.all([
-        API.get(`/dashboard/monthly-summary?month=${currentMonth}`),
-        API.get(`/budgets/?month=${currentMonth}`),
-        API.get('/expenses/'),
-      ]);
-
-      setSummary(summaryRes.data);
-      setBudgets(budgetsRes.data);
-      setRecentExpenses(expensesRes.data.slice(0, 5));
-
-      // Build 6 months of spend ending on whichever month is selected, so
-      // the comparison chart moves along with the month picker.
-      const [selY, selM] = currentMonth.split('-').map(Number);
-      const anchorDate = new Date(selY, selM - 1, 1);
-      const months = [];
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date(anchorDate.getFullYear(), anchorDate.getMonth() - i, 1);
-        months.push(d);
-      }
-      const monthlyTotals = await Promise.all(
-        months.map(async (d) => {
-          try {
-            const res = await API.get(`/dashboard/monthly-summary?month=${monthStr(d)}`);
-            return { month: monthLabel(d), expenses: res.data.total_expenses };
-          } catch {
-            return { month: monthLabel(d), expenses: 0 };
-          }
-        })
-      );
-      setComparisonData(monthlyTotals);
-    } catch (error) {
-      console.error("Failed to load dashboard data", error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => { fetchDashboard(); }, [currentMonth]);
-
-  const remaining = summary.total_budget - summary.total_expenses;
-  const percentUsed = summary.total_budget > 0 ? ((summary.total_expenses / summary.total_budget) * 100).toFixed(1) : 0;
-
-  return (
-    <div className="flex min-h-screen" style={{ backgroundColor: isDark ? '#0a0a0f' : '#f3f4f6', color: isDark ? 'white' : 'black' }}>
-      <Sidebar isDark={isDark} toggleTheme={toggleTheme} />
-      <main className="flex-1 p-8 space-y-8 overflow-y-auto">
-        <div className="flex justify-between items-center">
+    const navigate = useNavigate();
+    const toMonthStr = (dateObj) => `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+    const [currentMonth, setCurrentMonth] = useState(toMonthStr(new Date()));
+    const [summary, setSummary] = useState({ total_expenses: 0, total_budget: 0 });
+    const [budgets, setBudgets] = useState([]);
+    const [recentExpenses, setRecentExpenses] = useState([]);
+    const [comparisonData, setComparisonData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    useEffect(() => {
+        if (!localStorage.getItem('token'))
+            navigate('/');
+    }, [navigate]);
+    const monthLabel = (dateObj) => dateObj.toLocaleString('default', { month: 'short' });
+    const monthStr = toMonthStr;
+    const formatMonth = (m) => new Date(m + '-01T00:00:00').toLocaleString('default', { month: 'long', year: 'numeric' });
+    const changeMonth = (direction) => {
+        const [y, m] = currentMonth.split('-').map(Number);
+        const d = new Date(y, m - 1 + direction, 1);
+        setCurrentMonth(toMonthStr(d));
+    };
+    const fetchDashboard = async (isManualRefresh = false) => {
+        if (isManualRefresh)
+            setRefreshing(true);
+        else
+            setLoading(true);
+        try {
+            const [summaryRes, budgetsRes, expensesRes] = await Promise.all([
+                API.get(`/dashboard/monthly-summary?month=${currentMonth}`),
+                API.get(`/budgets/?month=${currentMonth}`),
+                API.get('/expenses/'),
+            ]);
+            setSummary(summaryRes.data);
+            setBudgets(budgetsRes.data);
+            setRecentExpenses(expensesRes.data.slice(0, 5));
+            const [selY, selM] = currentMonth.split('-').map(Number);
+            const anchorDate = new Date(selY, selM - 1, 1);
+            const months = [];
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date(anchorDate.getFullYear(), anchorDate.getMonth() - i, 1);
+                months.push(d);
+            }
+            const monthlyTotals = await Promise.all(months.map(async (d) => {
+                try {
+                    const res = await API.get(`/dashboard/monthly-summary?month=${monthStr(d)}`);
+                    return { month: monthLabel(d), expenses: res.data.total_expenses };
+                }
+                catch {
+                    return { month: monthLabel(d), expenses: 0 };
+                }
+            }));
+            setComparisonData(monthlyTotals);
+        }
+        catch (error) {
+            console.error("Failed to load dashboard data", error);
+        }
+        finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+    useEffect(() => { fetchDashboard(); }, [currentMonth]);
+    const remaining = summary.total_budget - summary.total_expenses;
+    const percentUsed = summary.total_budget > 0 ? ((summary.total_expenses / summary.total_budget) * 100).toFixed(1) : 0;
+    return (<div className="flex min-h-screen" style={{ backgroundColor: isDark ? '#0a0a0f' : '#f3f4f6', color: isDark ? 'white' : 'black' }}>
+      <Sidebar isDark={isDark} toggleTheme={toggleTheme}/>
+      <main className="flex-1 p-4 pt-20 sm:p-6 sm:pt-24 lg:p-8 lg:pt-8 space-y-6 sm:space-y-8 overflow-y-auto min-w-0">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold">Dashboard</h1>
             <p className="text-gray-500 text-sm">Welcome back</p>
           </div>
           <div className="flex items-center space-x-3">
-            <div className={`flex items-center space-x-2 px-4 py-2 rounded-lg border text-sm ${isDark ? 'bg-[#12121a] border-gray-800 text-gray-300' : 'bg-white border-gray-300 text-gray-700'}`}>
-              <ChevronLeft size={16} className="cursor-pointer hover:text-blue-400" onClick={() => changeMonth(-1)} />
-              <span className="min-w-[140px] text-center">{formatMonth(currentMonth)}</span>
-              <ChevronRight size={16} className="cursor-pointer hover:text-blue-400" onClick={() => changeMonth(1)} />
+            <div className={`flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-lg border text-sm flex-1 sm:flex-none justify-between sm:justify-start ${isDark ? 'bg-[#12121a] border-gray-800 text-gray-300' : 'bg-white border-gray-300 text-gray-700'}`}>
+              <ChevronLeft size={16} className="cursor-pointer hover:text-blue-400 shrink-0" onClick={() => changeMonth(-1)}/>
+              <span className="min-w-[110px] sm:min-w-[140px] text-center text-xs sm:text-sm">{formatMonth(currentMonth)}</span>
+              <ChevronRight size={16} className="cursor-pointer hover:text-blue-400 shrink-0" onClick={() => changeMonth(1)}/>
             </div>
-            <button
-              onClick={() => fetchDashboard(true)}
-              disabled={refreshing}
-              title="Refresh"
-              className={`px-3 py-2 rounded-lg border text-sm transition-colors disabled:opacity-50 ${isDark ? 'bg-[#12121a] border-gray-800 text-gray-300 hover:text-white' : 'bg-white border-gray-300 text-gray-700 hover:text-black'}`}
-            >
+            <button onClick={() => fetchDashboard(true)} disabled={refreshing} title="Refresh" className={`px-3 py-2 rounded-lg border text-sm transition-colors disabled:opacity-50 shrink-0 ${isDark ? 'bg-[#12121a] border-gray-800 text-gray-300 hover:text-white' : 'bg-white border-gray-300 text-gray-700 hover:text-black'}`}>
               {refreshing ? '…' : '⟳'}
             </button>
           </div>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-24">
+        {loading ? (<div className="flex items-center justify-center py-24">
             <svg className="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-          </div>
-        ) : (
-          <>
+          </div>) : (<>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className={`p-6 rounded-xl border ${isDark ? 'bg-[#12121a] border-gray-800' : 'bg-white border-gray-200 shadow-sm'}`}>
                 <p className="text-gray-400 text-sm">Total Spent</p>
                 <h2 className="text-3xl font-bold mt-2">${summary.total_expenses.toFixed(2)}</h2>
                 <div className="flex items-center mt-2 text-sm text-red-400">
-                  <TrendingUp size={16} className="mr-1" /> {percentUsed}% of budget used
+                  <TrendingUp size={16} className="mr-1"/> {percentUsed}% of budget used
                 </div>
               </div>
               <div className={`p-6 rounded-xl border ${isDark ? 'bg-[#12121a] border-gray-800' : 'bg-white border-gray-200 shadow-sm'}`}>
@@ -145,7 +122,7 @@ export default function Dashboard({ isDark, toggleTheme }) {
                 <p className="text-gray-400 text-sm">Remaining</p>
                 <h2 className={`text-3xl font-bold mt-2 ${remaining < 0 ? 'text-red-400' : 'text-green-400'}`}>${remaining.toFixed(2)}</h2>
                 <div className={`flex items-center mt-2 text-sm ${remaining < 0 ? 'text-red-400' : 'text-green-400'}`}>
-                  <TrendingDown size={16} className="mr-1" /> {remaining < 0 ? 'Over budget' : `${(100 - percentUsed).toFixed(1)}% left`}
+                  <TrendingDown size={16} className="mr-1"/> {remaining < 0 ? 'Over budget' : `${(100 - percentUsed).toFixed(1)}% left`}
                 </div>
               </div>
             </div>
@@ -153,12 +130,8 @@ export default function Dashboard({ isDark, toggleTheme }) {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className={`lg:col-span-1 p-6 rounded-xl border ${isDark ? 'bg-[#12121a] border-gray-800' : 'bg-white border-gray-200 shadow-sm'}`}>
                 <h3 className="font-semibold mb-6">Budget Limits</h3>
-                {budgets.length === 0 ? (
-                  <p className="text-sm text-gray-500">No budgets set for this month.</p>
-                ) : (
-                  <div className="space-y-6">
-                    {budgets.map((item) => (
-                      <div key={item.id}>
+                {budgets.length === 0 ? (<p className="text-sm text-gray-500">No budgets set for this month.</p>) : (<div className="space-y-6">
+                    {budgets.map((item) => (<div key={item.id}>
                         <div className="flex justify-between text-sm mb-2">
                           <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>{item.category}</span>
                           <span className="text-gray-400">${item.used_amount.toFixed(2)} / ${item.budget_amount.toFixed(2)}</span>
@@ -166,10 +139,8 @@ export default function Dashboard({ isDark, toggleTheme }) {
                         <div className={`w-full rounded-full h-2 ${isDark ? 'bg-gray-800' : 'bg-gray-200'}`}>
                           <div className={`h-2 rounded-full ${item.used_amount > item.budget_amount ? 'bg-red-500' : 'bg-blue-500'}`} style={{ width: `${Math.min(item.percentage_consumed, 100)}%` }}></div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      </div>))}
+                  </div>)}
               </div>
 
               <div className={`lg:col-span-2 p-6 rounded-xl border ${isDark ? 'bg-[#12121a] border-gray-800' : 'bg-white border-gray-200 shadow-sm'}`}>
@@ -179,45 +150,20 @@ export default function Dashboard({ isDark, toggleTheme }) {
                     <BarChart data={comparisonData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id="barFill" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#60a5fa" stopOpacity={1} />
-                          <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.7} />
+                          <stop offset="0%" stopColor="#60a5fa" stopOpacity={1}/>
+                          <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.7}/>
                         </linearGradient>
                         <linearGradient id="barFillActive" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#a78bfa" stopOpacity={1} />
-                          <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.85} />
+                          <stop offset="0%" stopColor="#a78bfa" stopOpacity={1}/>
+                          <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.85}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid
-                        strokeDasharray="0"
-                        vertical={false}
-                        stroke={isDark ? '#1e1e2e' : '#f0f1f3'}
-                      />
-                      <XAxis
-                        dataKey="month"
-                        stroke="transparent"
-                        tick={{ fill: isDark ? '#6b7280' : '#9ca3af', fontSize: 12 }}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <YAxis
-                        stroke="transparent"
-                        tick={{ fill: isDark ? '#6b7280' : '#9ca3af', fontSize: 12 }}
-                        tickLine={false}
-                        axisLine={false}
-                        tickFormatter={(v) => `$${v}`}
-                        width={56}
-                      />
-                      <Tooltip
-                        content={<ChartTooltip isDark={isDark} />}
-                        cursor={false}
-                      />
+                      <CartesianGrid strokeDasharray="0" vertical={false} stroke={isDark ? '#1e1e2e' : '#f0f1f3'}/>
+                      <XAxis dataKey="month" stroke="transparent" tick={{ fill: isDark ? '#6b7280' : '#9ca3af', fontSize: 12 }} tickLine={false} axisLine={false}/>
+                      <YAxis stroke="transparent" tick={{ fill: isDark ? '#6b7280' : '#9ca3af', fontSize: 12 }} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v}`} width={56}/>
+                      <Tooltip content={<ChartTooltip isDark={isDark}/>} cursor={false}/>
                       <Bar dataKey="expenses" radius={[6, 6, 0, 0]} maxBarSize={40}>
-                        {comparisonData.map((entry, index) => (
-                          <Cell
-                            key={entry.month}
-                            fill={index === comparisonData.length - 1 ? 'url(#barFillActive)' : 'url(#barFill)'}
-                          />
-                        ))}
+                        {comparisonData.map((entry, index) => (<Cell key={entry.month} fill={index === comparisonData.length - 1 ? 'url(#barFillActive)' : 'url(#barFill)'}/>))}
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
@@ -227,31 +173,23 @@ export default function Dashboard({ isDark, toggleTheme }) {
 
             <div className={`p-6 rounded-xl border ${isDark ? 'bg-[#12121a] border-gray-800' : 'bg-white border-gray-200 shadow-sm'}`}>
               <h3 className="font-semibold mb-6">Recent Expenses</h3>
-              {recentExpenses.length === 0 ? (
-                <p className="text-sm text-gray-500">No expenses recorded yet.</p>
-              ) : (
-                <div className="space-y-4">
-                  {recentExpenses.map((item) => (
-                    <div key={item.id} className={`flex items-center justify-between py-3 border-b last:border-0 ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
-                      <div className="flex items-center space-x-4">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-blue-400 ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>{item.category ? item.category.charAt(0) : '🏦'}</div>
-                        <div>
-                          <p className="font-medium text-sm">{item.description}</p>
-                          <p className="text-xs text-gray-500">{item.category || (item.account_name ? `Bank: ${item.account_name}` : 'Bank Account')}</p>
+              {recentExpenses.length === 0 ? (<p className="text-sm text-gray-500">No expenses recorded yet.</p>) : (<div className="space-y-4">
+                  {recentExpenses.map((item) => (<div key={item.id} className={`flex items-center justify-between gap-3 py-3 border-b last:border-0 ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
+                      <div className="flex items-center space-x-4 min-w-0">
+                        <div className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-sm font-bold text-blue-400 ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>{item.category ? item.category.charAt(0) : '🏦'}</div>
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm truncate">{item.description}</p>
+                          <p className="text-xs text-gray-500 truncate">{item.category || (item.account_name ? `Bank: ${item.account_name}` : 'Bank Account')}</p>
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right shrink-0">
                         <p className="font-medium text-red-400">-${item.amount.toFixed(2)}</p>
                         <p className="text-xs text-gray-500">{item.expense_date}</p>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    </div>))}
+                </div>)}
             </div>
-          </>
-        )}
+          </>)}
       </main>
-    </div>
-  );
+    </div>);
 }
